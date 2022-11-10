@@ -55,7 +55,7 @@ class Board:
 
     def printBoard(self, printWinner=True):
         board = self.board
-        markers = dict({0:' ', 1:"X", 2:"O"})
+        markers = dict({0:' ', 1:"X", 2:"\x1b[31m0\x1b[0m"})
         print("    ", end="")
         for j in range(len(board[0])):
             print(j, end=" ");
