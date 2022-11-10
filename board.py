@@ -8,9 +8,15 @@ class Board:
         
         
     def initBoard(self, n=3):
-        self.board = [[0 for i in range(self.n)] for j in range(self.n)]
+        self.board = np.array([[0 for i in range(self.n)] for j in range(self.n)])
         return self.board
     
+    def copy(b):
+        newB = Board()
+        newB.board = b.board.copy()
+        newB.masks = b.masks
+        return newB
+
     def initMasks(self):
         board = self.board
         masks = []
@@ -52,6 +58,10 @@ class Board:
             coords = move[1]
             self.board[coords[0]][coords[1]] = player
         return self.board
+    
+    def boardToMoves(self):
+        board = self.board
+        return [ (board[i][j], [i,j])  for i in range(len(board)) for j in range(len(board[i])) if board[i][j] >0]
 
     def printBoard(self, printWinner=True):
         board = self.board
