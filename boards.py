@@ -47,6 +47,19 @@ def simulate(board, masks, player_to_move=1, max_moves = 1000):
     return board, -1
 
 
+def printBoard(b, n, printWinner=True, markers = dict({0:' ', 1:"X", 2:"\x1b[31m0\x1b[0m"})):
+    board = b.reshape([n, n])
+    print("    ", end="")
+    for j in range(len(board[0])):
+        print(j, end=" ");
+    print("")
+    for i in range(len(board)):
+        print(i," |", end="")
+        for j in range(len(board[i])):
+              print(markers[board[i][j]], end=" ")
+        print("|")
+
+
 class LinearBoard:
     def __init__(self, n=3):
         self.n = n
@@ -70,19 +83,7 @@ class LinearBoard:
         return getWinner(self.board, self.masks)
    
     def printBoard(self, printWinner=True):
-        board = self.board.reshape([self.n, self.n])
-        markers = dict({0:' ', 1:"X", 2:"\x1b[31m0\x1b[0m"})
-        print("    ", end="")
-        for j in range(len(board[0])):
-            print(j, end=" ");
-        print("")
-        for i in range(len(board)):
-            print(i," |", end="")
-            for j in range(len(board[i])):
-                  print(markers[board[i][j]], end=" ")
-            print("|")
-        # if printWinner:
-        #     print("Winner:", self.getWinner())
+        printBoard(self.board, self.n)
         
 
         
