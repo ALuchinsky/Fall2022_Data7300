@@ -17,6 +17,19 @@ def ij_to_ind(i, j, n):
 def ind_to_ij(ind, n):
     return [ind//n, i % n]
 
+def initMasks(n):
+    masks = np.empty((0,n), dtype = 'int')
+    # rows
+    for I in range(n):
+        masks = np.vstack([masks, [ij_to_ind(i, j, n) for i in range(n) for j in range(n) if i==I]])
+    # columns
+    for J in range(n):
+        masks = np.vstack([masks, [ij_to_ind(i,j, n) for i in range(n) for j in range(n) if j==J]])
+    # diagonals
+    masks = np.vstack([masks, [ij_to_ind(i,j, n) for i in range(n) for j in range(n) if i==j]])
+    masks = np.vstack([masks, [ij_to_ind(i,j, n) for i in range(n) for j in range(n) if i==n-j-1]])
+    return np.array(masks)
+
 
 def simulate(board, masks, player_to_move=1, max_moves = 1000):
     n_moves = 0;
@@ -38,23 +51,10 @@ class LinearBoard:
     def __init__(self, n=3):
         self.n = n
         self.board = np.zeros(self.n*self.n, dtype = 'int')
-        self.initMasks()
+        self.masks = self.initMasks()
         
     def initMasks(self):
-        n = self.n
-        masks = np.empty((0,n), dtype = 'int')
-        # rows
-        for I in range(n):
-            masks = np.vstack([masks, [self.ij_to_ind(i,j) for i in range(n) for j in range(n) if i==I]])
-        # columns
-        for J in range(n):
-            masks = np.vstack([masks, [self.ij_to_ind(i,j) for i in range(n) for j in range(n) if j==J]])
-        # diagonals
-        masks = np.vstack([masks, [self.ij_to_ind(i,j) for i in range(n) for j in range(n) if i==j]])
-        masks = np.vstack([masks, [self.ij_to_ind(i,j) for i in range(n) for j in range(n) if i==n-j-1]])
-        self.masks = np.array(masks)
-        return masks
-
+        return initMasks(self.n)
     
     def ij_to_ind(self, i, j):
         return ij_to_ind(i,j,self.n)
