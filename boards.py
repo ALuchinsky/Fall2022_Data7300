@@ -1,5 +1,26 @@
 import numpy as np
 
+def find_best_MC_move(board, masks, mc_trials = 1000, max_moves = 100):
+    player_to_move = get_player_to_move(board)
+    next_player = 3 - player_to_move
+    print("Finding best move for player ", player_to_move, "next one will be ", next_player)
+    moves = boards.getMoves(board)
+    print("There are ", len(moves), " possible moves")
+    moves_stats = np.zeros(len(moves))
+    for iMove in tqdm.tqdm(range(len(moves))):
+        bb = board.copy()
+        bb[ moves[iMove]] = player_to_move # making test move
+        # MC the play with the opponent starting
+        boards_collection = np.tile(bb, (mc_trials,1))
+        mc = np.apply_along_axis(lambda b: boards.simulate(b, masks, player_to_move=next_player, max_moves=max_moves)[1], 1, boards_collection)
+        moves_stats[iMove] = np.mean(mc==player_to_move)
+    i_best_move = np.argmax(moves_stats)
+    return moves[i_best_move], player_to_move, sorted([list(m) for m in zip(moves, moves_stat)], key= lambda r: -r[1])
+
+
+def get_player_to_move(board):
+    return 1 if np.sum(board==1) == np.sum(board==2) else 2
+
 def getMoves(board):
     return [i for i in range(len(board)) if board[i]==0]    
 
@@ -31,7 +52,8 @@ def initMasks(n):
     return np.array(masks)
 
 
-def simulate(board, masks, player_to_move=1, max_moves = 1000):
+def simulate(board_, masks, player_to_move=1, max_moves = 1000):
+    board = board_.copy()
     n_moves = 0;
     while n_moves < max_moves:
         n_moves = n_moves + 1
