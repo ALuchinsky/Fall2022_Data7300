@@ -6,8 +6,11 @@ import tqdm
 N = 5;
 print("Simple ",N,"x",N, "game")
 
-def initBoard(n=N):
-    return np.zeros((n,n),'int')
+masks = []
+
+def initBoard():
+    global masks, N
+    return np.zeros((N,N),'int')
 
 def interesting_move(board, r0, c0, d=1):
     if not board[r0, c0]==0:
@@ -31,8 +34,10 @@ def getMoves(board, d=1):
         )
     return moves
 
+
 #
 def initMasks(board):
+    global masks
     masks = []
     # rows
     for I in range(len(board)):
@@ -47,7 +52,8 @@ def initMasks(board):
 
 masks = initMasks(initBoard())
 
-def getWinner(board, masks=masks):
+def getWinner(board):
+    global masks
     for M in masks:
         masked_board = np.array([board[i][j] for (i,j) in M])
         candidate = masked_board[0]
@@ -218,3 +224,31 @@ def gen_tournament(p1=None, p2=None, n=100, rnd=0.9, d=1, tqdm_disable = False):
         except:
             n_fault = n_fault + 1
     return t_games, n_fault
+
+def getCNNModel():
+    board = initBoard()
+    numCells = len(board)*len(board[0])
+    num_rows = len(board)
+    outcomes = 3
+    CNNmodel = keras.models.Sequential()
+    CNNmodel.add( keras.layers.InputLayer(input_shape=(numCells, )))
+    CNNmodel.add( keras.layers.Reshape( target_shape = (num_rows, num_rows, 1)))
+    CNNmodel.add( keras.layers.Conv2D(filters = 32, kernel_size = 3, padding = "same"))
+    CNNmodel.add( keras.layers.Reshape( target_shape = (1,5*5*32)))
+    CNNmodel.add( keras.layers.BatchNormalization())
+    CNNmodel.add( keras.layers.Dense(100, activation = "relu"))
+    CNNmodel.add( keras.layers.BatchNormalization())
+    CNNmodel.add( keras.layers.Dense(20, activation = "relu"))
+    CNNmodel.add( keras.layers.BatchNormalization())
+    CNNmodel.add( keras.layers.Dense(3, activation = "relu"))
+    CNNmodel.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
+    CNNmodel.add( keras.layers.Reshape(target_shape=(3,)))
+    # training the model
+    # CNNmodel.compile(loss = keras.losses.categorical_crossentropy,
+    #           optimizer = keras.optimizers.SGD(lr = 0.01),
+    #           metrics =['accuracy'])
+    CNNmodel.compile(optimizer='adam',
+                  loss=keras.losses.MeanSquaredError(),
+                  metrics=['accuracy'])
+#    [CNNmodel.input_shape, CNNmodel.output_shape]
+    return CNNmodel
