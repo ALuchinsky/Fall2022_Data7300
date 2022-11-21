@@ -2,37 +2,55 @@ import numpy as np
 import numpy.random as random
 import matplotlib.pyplot as plt
 import tqdm
+from IPython.display import display, clear_output
 
 N = 5;
 print("Simple ",N,"x",N, "game")
 
 masks = []
 
+def setN(n):
+    global N, masks
+    N = n
+    masks = initMasks( initBoard())
+
 def initBoard():
     global masks, N
     return np.zeros((N,N),'int')
+
+def playMoves(moves):
+    for i in range(len(moves)+1):
+        clear_output()
+        display(printMoves(moves[:i]))
+        input()
 
 def interesting_move(board, r0, c0, d=1):
     if not board[r0, c0]==0:
         return False
     window = board[ max(0, r0-d):min(r0+d+1, board.shape[0]), max(0, c0-d):min(c0+d+1, board.shape[1])]
+    if d==0 and board[r0, c0]==0:
+        return True
     if np.alltrue(window==0):
         return False
     return True
 
+# def getMoves(board, d=1):
+#     dim1, dim2 = board.shape
+#     moves = np.array(
+#         [[i,j] for i in range(dim1) for j in range(dim2) if interesting_move(board, i, j, d=d)]
+#     )
+#     if len(moves)==0:
+#         moves = np.array(
+#             [[i,j] for i in range(len(board)) 
+#                 for j in range(len(board[i])) 
+#                 if board[i][j]==0]
+#         )
+#     return moves
 
-def getMoves(board, d=1):
-    dim1, dim2 = board.shape
-    moves = np.array(
-        [[i,j] for i in range(dim1) for j in range(dim2) if interesting_move(board, i, j, d=d)]
-    )
-    if len(moves)==0:
-        moves = np.array(
-            [[i,j] for i in range(len(board)) 
+def getMoves(board, d=0):
+    return [[i,j] for i in range(len(board)) 
                 for j in range(len(board[i])) 
                 if board[i][j]==0]
-        )
-    return moves
 
 
 #
@@ -234,15 +252,15 @@ def getCNNModel():
     CNNmodel.add( keras.layers.InputLayer(input_shape=(numCells, )))
     CNNmodel.add( keras.layers.Reshape( target_shape = (num_rows, num_rows, 1)))
     CNNmodel.add( keras.layers.Conv2D(filters = 32, kernel_size = 3, padding = "same"))
-    CNNmodel.add( keras.layers.Reshape( target_shape = (1,5*5*32)))
+    CNNmodel.add( keras.layers.Reshape( target_shape = (1,num_rows*num_rows*32)))
     CNNmodel.add( keras.layers.BatchNormalization())
     CNNmodel.add( keras.layers.Dense(100, activation = "relu"))
     CNNmodel.add( keras.layers.BatchNormalization())
     CNNmodel.add( keras.layers.Dense(20, activation = "relu"))
     CNNmodel.add( keras.layers.BatchNormalization())
     CNNmodel.add( keras.layers.Dense(3, activation = "relu"))
-    CNNmodel.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
     CNNmodel.add( keras.layers.Reshape(target_shape=(3,)))
+    # CNNmodel.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['acc'])
     # training the model
     # CNNmodel.compile(loss = keras.losses.categorical_crossentropy,
     #           optimizer = keras.optimizers.SGD(lr = 0.01),
@@ -252,3 +270,44 @@ def getCNNModel():
                   metrics=['accuracy'])
 #    [CNNmodel.input_shape, CNNmodel.output_shape]
     return CNNmodel
+
+def playMoves(moves):
+    for i in range(1, len(moves)+1):
+        clear_output()
+        display(printMoves(moves[:i]))
+        input()
+    clear_output()
+    display(printMoves(moves))
+
+from PIL import Image
+cross = Image.open("./figs/cross.png")
+zero = Image.open("./figs/naught.png")
+grid = Image.open("./figs/grid.png")
+
+    
+def drawBoard(board, ax=False):
+    if not ax:
+        fig, ax = plt.subplots()
+    ax.imshow(grid, extent=(0, 3, 0, 3))
+    for r in range(board.shape[0]):
+        for c in range(board.shape[1]):
+            extent = (c+0.1, c+0.9, 2-r+0.1, 2-r+0.9)
+            if(board[r][c]==1):
+                ax.imshow(cross, extent=extent)
+            if(board[r][c]==2):
+                ax.imshow(zero, extent=extent)
+    ax.set_xlim(0,3)
+    ax.set_ylim(0,3)
+    ax.set_title("Winner = " + str(getWinner(board)))
+    return ax
+
+
+def drawMoves(moves, ax=False):
+    return drawBoard(movesToBoard(moves), ax=ax)
+
+def saveMoves(moves, path="./game_"):
+    fig, ax = plt.subplots()
+    plt.axis("off")
+    for i in range(len(moves)+1):
+        ax = drawMoves(moves[:i], ax)
+        plt.savefig(path+str(i)+".png")
